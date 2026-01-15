@@ -483,6 +483,57 @@
             border: 2px solid #a5f3fc;
         }
 
+        .layoff-badge {
+            padding: 0.5rem 0.875rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            margin-top: 0.5rem;
+        }
+
+        .layoff-critical {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #fca5a5;
+            animation: pulse-red 2s ease-in-out infinite;
+        }
+
+        .layoff-elevated {
+            background: #fed7aa;
+            color: #9a3412;
+            border: 2px solid #fdba74;
+        }
+
+        .layoff-moderate {
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #fde68a;
+        }
+
+        .layoff-low {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #a7f3d0;
+        }
+
+        .layoff-minimal {
+            background: #f1f5f9;
+            color: #475569;
+            border: 2px solid #e2e8f0;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+            }
+            50% { 
+                box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+            }
+        }
+
         .talent-details {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -602,7 +653,7 @@
         <div class="header-content">
             <div class="alert-banner">
                 <span class="alert-icon">⚠️</span>
-                <span class="alert-text">WORKFORCE REDUCTION EVENT DETECTED - Confirmed WARN Notice Filing</span>
+                <span class="alert-text">WARN NOTICE ACTIVE: 220+ roles across Baldwin Park & Carlsbad, CA facilities | 323 High-Risk employees identified | 738 total at-risk</span>
             </div>
             <h1 class="header-title">Workforce Intelligence Platform</h1>
             <p class="header-subtitle">FormFactor Inc. - Layoff Sentinel Analysis Dashboard</p>
@@ -711,6 +762,35 @@
                     <div class="kpi-subtext">29.9% of workforce</div>
                     <span class="kpi-trend positive">High-Value Talent</span>
                 </div>
+
+                <div class="kpi-card" style="border-color: #dc2626;">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">🚨</span>
+                        <span class="kpi-label">Layoff Risk - Critical</span>
+                    </div>
+                    <div class="kpi-value" id="kpiCriticalRisk" style="color: #dc2626;">323</div>
+                    <div class="kpi-subtext">CA + FormFactor + High-Risk Roles</div>
+                    <span class="kpi-trend negative">⚠️ WARN Notice Impact</span>
+                </div>
+
+                <div class="kpi-card" style="border-color: #f59e0b;">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">⚡</span>
+                        <span class="kpi-label">Layoff Risk - Elevated</span>
+                    </div>
+                    <div class="kpi-value" id="kpiElevatedRisk" style="color: #f59e0b;">415</div>
+                    <div class="kpi-subtext">CA + FormFactor employees</div>
+                    <span class="kpi-trend negative">↑ Monitoring Required</span>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">📋</span>
+                        <span class="kpi-label">Total At-Risk</span>
+                    </div>
+                    <div class="kpi-value" id="kpiTotalAtRisk">738</div>
+                    <div class="kpi-subtext">39.3% of workforce affected</div>
+                </div>
             </div>
         </div>
 
@@ -742,12 +822,34 @@
                         <canvas id="salaryChart"></canvas>
                     </div>
                 </div>
+                <div class="chart-container">
+                    <div class="chart-title">🚨 Layoff Impact Assessment</div>
+                    <div class="chart-wrapper">
+                        <canvas id="layoffChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="filters-section">
             <h2 class="section-title">Filter & Search Talent Pool</h2>
             <p class="section-subtitle">Refine results to identify specific profiles of interest</p>
+            
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px;">
+                <div style="font-weight: 600; margin-bottom: 0.5rem; color: #92400e;">⚡ Quick Filters - Layoff Impact</div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button class="btn" style="background: #fee2e2; color: #991b1b; border: 2px solid #fca5a5;" onclick="quickFilterLayoff('Critical - High Layoff Risk')">
+                        🔴 Critical Risk (323)
+                    </button>
+                    <button class="btn" style="background: #fed7aa; color: #9a3412; border: 2px solid #fdba74;" onclick="quickFilterLayoff('Elevated - At Risk')">
+                        🟠 Elevated Risk (415)
+                    </button>
+                    <button class="btn" style="background: white; color: var(--text-primary); border: 2px solid var(--border);" onclick="quickFilterLayoff('')">
+                        Show All
+                    </button>
+                </div>
+            </div>
+            
             <div class="filters-grid">
                 <div class="filter-group">
                     <label class="filter-label">🔍 Search</label>
@@ -795,6 +897,17 @@
                         <option value="5-10">5-10 years</option>
                         <option value="10-20">10-20 years</option>
                         <option value="20+">20+ years</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">🚨 Layoff Impact</label>
+                    <select id="layoffFilter" class="filter-select">
+                        <option value="">All Impact Levels</option>
+                        <option value="Critical - High Layoff Risk">🔴 Critical Risk</option>
+                        <option value="Elevated - At Risk">🟠 Elevated Risk</option>
+                        <option value="Moderate - Role-Based Risk">🟡 Moderate Risk</option>
+                        <option value="Low - Geographic Risk">🟢 Low Risk</option>
+                        <option value="Minimal Risk">⚪ Minimal Risk</option>
                     </select>
                 </div>
             </div>
@@ -862,6 +975,11 @@
             const remoteReady = workforceData.filter(p => ['High', 'Very High'].includes(p.remote)).length;
             const uniqueLocations = new Set(workforceData.map(p => p.location)).size;
             const engineers = workforceData.filter(p => p.category === 'Engineering').length;
+            
+            // Layoff impact counts
+            const criticalRisk = workforceData.filter(p => p.layoffImpact === 'Critical - High Layoff Risk').length;
+            const elevatedRisk = workforceData.filter(p => p.layoffImpact === 'Elevated - At Risk').length;
+            const totalAtRisk = criticalRisk + elevatedRisk;
 
             document.getElementById('kpiTotalWorkforce').textContent = workforceData.length.toLocaleString();
             document.getElementById('kpiTotalPayroll').textContent = '$' + Math.round(totalPayroll / 1000000) + 'M';
@@ -871,6 +989,9 @@
             document.getElementById('kpiRemoteReady').textContent = remoteReady.toLocaleString();
             document.getElementById('kpiLocations').textContent = uniqueLocations.toLocaleString();
             document.getElementById('kpiEngineers').textContent = engineers.toLocaleString();
+            document.getElementById('kpiCriticalRisk').textContent = criticalRisk.toLocaleString();
+            document.getElementById('kpiElevatedRisk').textContent = elevatedRisk.toLocaleString();
+            document.getElementById('kpiTotalAtRisk').textContent = totalAtRisk.toLocaleString();
         }
 
         function populateFilters() {
@@ -1008,6 +1129,34 @@
                     }
                 }
             });
+
+            // Layoff Impact Chart
+            const layoffCounts = {
+                'Critical': 0,
+                'Elevated': 0,
+                'Moderate': 0,
+                'Low': 0,
+                'Minimal': 0
+            };
+            workforceData.forEach(p => {
+                if (p.layoffImpact.includes('Critical')) layoffCounts['Critical']++;
+                else if (p.layoffImpact.includes('Elevated')) layoffCounts['Elevated']++;
+                else if (p.layoffImpact.includes('Moderate')) layoffCounts['Moderate']++;
+                else if (p.layoffImpact.includes('Low')) layoffCounts['Low']++;
+                else layoffCounts['Minimal']++;
+            });
+
+            new Chart(document.getElementById('layoffChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(layoffCounts),
+                    datasets: [{
+                        data: Object.values(layoffCounts),
+                        backgroundColor: ['#dc2626', '#f59e0b', '#fbbf24', '#10b981', '#94a3b8']
+                    }]
+                },
+                options: chartDefaults
+            });
         }
 
         function renderTalentGrid(data = filteredData) {
@@ -1031,6 +1180,26 @@
                 const riskClass = person.risk.toLowerCase().replace(' ', '-');
                 const salaryK = Math.round(person.salary / 1000);
                 
+                // Layoff impact badge styling
+                let layoffClass = '';
+                let layoffIcon = '';
+                if (person.layoffImpact === 'Critical - High Layoff Risk') {
+                    layoffClass = 'layoff-critical';
+                    layoffIcon = '🔴';
+                } else if (person.layoffImpact === 'Elevated - At Risk') {
+                    layoffClass = 'layoff-elevated';
+                    layoffIcon = '🟠';
+                } else if (person.layoffImpact === 'Moderate - Role-Based Risk') {
+                    layoffClass = 'layoff-moderate';
+                    layoffIcon = '🟡';
+                } else if (person.layoffImpact === 'Low - Geographic Risk') {
+                    layoffClass = 'layoff-low';
+                    layoffIcon = '🟢';
+                } else {
+                    layoffClass = 'layoff-minimal';
+                    layoffIcon = '⚪';
+                }
+                
                 return `
                     <div class="talent-card">
                         <div class="talent-card-header">
@@ -1039,7 +1208,10 @@
                                 <div class="talent-title">${person.title}</div>
                                 <div class="talent-company">${person.company}</div>
                             </div>
-                            <div class="risk-badge risk-${riskClass}">${person.risk}</div>
+                            <div>
+                                <div class="risk-badge risk-${riskClass}">${person.risk}</div>
+                                <div class="layoff-badge ${layoffClass}">${layoffIcon} ${person.layoffImpact.split(' - ')[0]}</div>
+                            </div>
                         </div>
                         <div class="talent-details">
                             <div class="detail-item">
@@ -1089,6 +1261,11 @@
             }
         }
 
+        function quickFilterLayoff(impactLevel) {
+            document.getElementById('layoffFilter').value = impactLevel;
+            applyFilters();
+        }
+
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const location = document.getElementById('locationFilter').value;
@@ -1096,6 +1273,7 @@
             const risk = document.getElementById('riskFilter').value;
             const remote = document.getElementById('remoteFilter').value;
             const experience = document.getElementById('experienceFilter').value;
+            const layoffImpact = document.getElementById('layoffFilter').value;
 
             filteredData = workforceData.filter(person => {
                 const matchSearch = !searchTerm || 
@@ -1106,6 +1284,7 @@
                 const matchRole = !role || person.category === role;
                 const matchRisk = !risk || person.risk === risk;
                 const matchRemote = !remote || person.remote === remote;
+                const matchLayoffImpact = !layoffImpact || person.layoffImpact === layoffImpact;
                 
                 let matchExperience = true;
                 if (experience) {
@@ -1115,7 +1294,7 @@
                     else if (experience === '20+') matchExperience = person.experience >= 20;
                 }
 
-                return matchSearch && matchLocation && matchRole && matchRisk && matchRemote && matchExperience;
+                return matchSearch && matchLocation && matchRole && matchRisk && matchRemote && matchExperience && matchLayoffImpact;
             });
 
             renderTalentGrid(filteredData);
@@ -1128,6 +1307,7 @@
             document.getElementById('riskFilter').value = '';
             document.getElementById('remoteFilter').value = '';
             document.getElementById('experienceFilter').value = '';
+            document.getElementById('layoffFilter').value = '';
             filteredData = workforceData;
             renderTalentGrid();
         }
