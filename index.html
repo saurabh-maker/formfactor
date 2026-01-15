@@ -389,6 +389,23 @@
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .results-badge.filtering {
+            background: var(--accent);
+            animation: pulse-badge 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
         }
 
         .talent-grid {
@@ -852,8 +869,12 @@
             
             <div class="filters-grid">
                 <div class="filter-group">
-                    <label class="filter-label">🔍 Search</label>
-                    <input type="text" id="searchInput" class="filter-input" placeholder="Name, title, or company...">
+                    <label class="filter-label">🔍 Search Name/Title/Company</label>
+                    <input type="text" id="searchInput" class="filter-input" placeholder="John Smith, Engineer, FormFactor...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">💡 Skills / Keywords</label>
+                    <input type="text" id="skillsInput" class="filter-input" placeholder="Manufacturing, Test, Python, Quality, etc.">
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">📍 Location</label>
@@ -912,12 +933,13 @@
                 </div>
             </div>
             <div class="filter-actions">
-                <button class="btn btn-primary" onclick="applyFilters()">
-                    <span>🔍</span> Apply Filters
-                </button>
                 <button class="btn btn-secondary" onclick="resetFilters()">
-                    <span>↻</span> Reset All
+                    <span>↻</span> Reset All Filters
                 </button>
+                <div style="color: var(--primary); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.2rem;">✨</span>
+                    <span>Filters apply automatically - No need to click Apply!</span>
+                </div>
             </div>
         </div>
 
@@ -965,6 +987,7 @@
             populateFilters();
             createCharts();
             renderTalentGrid();
+            setupAutoFilters();
         }
 
         function updateKPIs() {
@@ -1266,8 +1289,22 @@
             applyFilters();
         }
 
+        // Debounce function for text inputs
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const skillsTerm = document.getElementById('skillsInput').value.toLowerCase();
             const location = document.getElementById('locationFilter').value;
             const role = document.getElementById('roleFilter').value;
             const risk = document.getElementById('riskFilter').value;
@@ -1280,6 +1317,12 @@
                     person.name.toLowerCase().includes(searchTerm) ||
                     person.title.toLowerCase().includes(searchTerm) ||
                     person.company.toLowerCase().includes(searchTerm);
+                
+                // Skills/keyword search in title
+                const matchSkills = !skillsTerm ||
+                    person.title.toLowerCase().includes(skillsTerm) ||
+                    person.category.toLowerCase().includes(skillsTerm);
+                
                 const matchLocation = !location || person.location === location;
                 const matchRole = !role || person.category === role;
                 const matchRisk = !risk || person.risk === risk;
@@ -1294,7 +1337,7 @@
                     else if (experience === '20+') matchExperience = person.experience >= 20;
                 }
 
-                return matchSearch && matchLocation && matchRole && matchRisk && matchRemote && matchExperience && matchLayoffImpact;
+                return matchSearch && matchSkills && matchLocation && matchRole && matchRisk && matchRemote && matchExperience && matchLayoffImpact;
             });
 
             renderTalentGrid(filteredData);
@@ -1302,6 +1345,7 @@
 
         function resetFilters() {
             document.getElementById('searchInput').value = '';
+            document.getElementById('skillsInput').value = '';
             document.getElementById('locationFilter').value = '';
             document.getElementById('roleFilter').value = '';
             document.getElementById('riskFilter').value = '';
@@ -1312,7 +1356,22 @@
             renderTalentGrid();
         }
 
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        // Auto-apply filters on any change
+        function setupAutoFilters() {
+            const debouncedFilter = debounce(applyFilters, 300);
+            
+            // Text inputs with debounce for better performance
+            document.getElementById('searchInput').addEventListener('input', debouncedFilter);
+            document.getElementById('skillsInput').addEventListener('input', debouncedFilter);
+            
+            // Dropdowns apply immediately
+            document.getElementById('locationFilter').addEventListener('change', applyFilters);
+            document.getElementById('roleFilter').addEventListener('change', applyFilters);
+            document.getElementById('riskFilter').addEventListener('change', applyFilters);
+            document.getElementById('remoteFilter').addEventListener('change', applyFilters);
+            document.getElementById('experienceFilter').addEventListener('change', applyFilters);
+            document.getElementById('layoffFilter').addEventListener('change', applyFilters);
+        }
     </script>
 </body>
 </html>
