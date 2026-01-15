@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workforce Intelligence Platform | FormFactor Layoff Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Crimson+Pro:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="workforce_data_compact.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e40af;
+            --primary-dark: #1e3a8a;
+            --secondary: #0891b2;
+            --accent: #f59e0b;
+            --success: #059669;
+            --warning: #dc2626;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --border-dark: #cbd5e1;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            margin: -2rem -2rem 2rem -2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .alert-banner {
+            background: rgba(220, 38, 38, 0.15);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: white;
+        }
+
+        .header-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .header-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 400;
+            margin-bottom: 2rem;
+        }
+
+        .event-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .metadata-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .metadata-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .metadata-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .kpi-section {
+            margin-bottom: 2rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-icon {
+            font-size: 1.75rem;
+            opacity: 0.8;
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-subtext {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .kpi-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+        }
+
+        .kpi-trend.negative {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--warning);
+        }
+
+        .kpi-trend.positive {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success);
+        }
+
+        .analytics-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+        }
+
+        .chart-container {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .filters-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-input, .filter-select {
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.875rem 1.75rem;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border-dark);
+        }
+
+        .directory-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        .directory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .results-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .results-count {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .results-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.375rem 0.875rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .talent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .talent-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .talent-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .talent-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+        }
+
+        .talent-info {
+            flex: 1;
+        }
+
+        .talent-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .talent-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .talent-company {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .risk-badge {
+            padding: 0.5rem 0.875rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .risk-very-high {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #fecaca;
+        }
+
+        .risk-high {
+            background: #fed7aa;
+            color: #9a3412;
+            border: 2px solid #fdba74;
+        }
+
+        .risk-medium {
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #fde68a;
+        }
+
+        .risk-low {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #a7f3d0;
+        }
+
+        .risk-very-low {
+            background: #cffafe;
+            color: #155e75;
+            border: 2px solid #a5f3fc;
+        }
+
+        .talent-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding: 1.25rem;
+            background: white;
+            border-radius: 12px;
+            margin: 1.25rem 0;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-value {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .talent-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .action-btn {
+            padding: 0.875rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .linkedin-btn {
+            background: #0077b5;
+            color: white;
+        }
+
+        .linkedin-btn:hover {
+            background: #006399;
+            transform: translateY(-2px);
+        }
+
+        .email-btn {
+            background: white;
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .email-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 2rem 1rem;
+                margin: -1rem -1rem 1rem -1rem;
+            }
+
+            .header-title {
+                font-size: 2rem;
+            }
+
+            .kpi-grid, .charts-grid, .talent-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="alert-banner">
+                <span class="alert-icon">⚠️</span>
+                <span class="alert-text">WORKFORCE REDUCTION EVENT DETECTED - Confirmed WARN Notice Filing</span>
+            </div>
+            <h1 class="header-title">Workforce Intelligence Platform</h1>
+            <p class="header-subtitle">FormFactor Inc. - Layoff Sentinel Analysis Dashboard</p>
+            <div class="event-metadata">
+                <div class="metadata-item">
+                    <div class="metadata-label">Company</div>
+                    <div class="metadata-value">FormFactor Inc.</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Detection Date</div>
+                    <div class="metadata-value">Jan 10, 2026</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Industry</div>
+                    <div class="metadata-value">Semiconductor Test</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Impact Locations</div>
+                    <div class="metadata-value">CA (Multiple)</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Estimated Roles</div>
+                    <div class="metadata-value">220+ Positions</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Confidence</div>
+                    <div class="metadata-value">High</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="kpi-section">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">👥</span>
+                        <span class="kpi-label">Total Workforce</span>
+                    </div>
+                    <div class="kpi-value" id="kpiTotalWorkforce">1,878</div>
+                    <div class="kpi-subtext">Analyzed profiles across all subsidiaries</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">💰</span>
+                        <span class="kpi-label">Total Annual Payroll</span>
+                    </div>
+                    <div class="kpi-value" id="kpiTotalPayroll">$272M</div>
+                    <div class="kpi-subtext">Combined compensation exposure</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">📊</span>
+                        <span class="kpi-label">Avg Total Comp</span>
+                    </div>
+                    <div class="kpi-value" id="kpiAvgComp">$145K</div>
+                    <div class="kpi-subtext">Median: $109K | Range: $45K-$385K</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">⚠️</span>
+                        <span class="kpi-label">High Flight Risk</span>
+                    </div>
+                    <div class="kpi-value" id="kpiHighRisk">1,244</div>
+                    <div class="kpi-subtext">66.2% of workforce</div>
+                    <span class="kpi-trend negative">↑ Critical Risk Level</span>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">🎓</span>
+                        <span class="kpi-label">Avg Experience</span>
+                    </div>
+                    <div class="kpi-value" id="kpiAvgExperience">20.5</div>
+                    <div class="kpi-subtext">Years of industry experience</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">🌐</span>
+                        <span class="kpi-label">Remote Ready</span>
+                    </div>
+                    <div class="kpi-value" id="kpiRemoteReady">737</div>
+                    <div class="kpi-subtext">39.2% high remote suitability</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">📍</span>
+                        <span class="kpi-label">Geographic Spread</span>
+                    </div>
+                    <div class="kpi-value" id="kpiLocations">162</div>
+                    <div class="kpi-subtext">Unique locations worldwide</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-icon">⚙️</span>
+                        <span class="kpi-label">Engineering Roles</span>
+                    </div>
+                    <div class="kpi-value" id="kpiEngineers">562</div>
+                    <div class="kpi-subtext">29.9% of workforce</div>
+                    <span class="kpi-trend positive">High-Value Talent</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="analytics-section">
+            <h2 class="section-title">Workforce Analytics</h2>
+            <p class="section-subtitle">Comprehensive breakdown of roles, risk levels, and compensation data</p>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">📊 Role Distribution by Category</div>
+                    <div class="chart-wrapper">
+                        <canvas id="roleChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">⚠️ Flight Risk Analysis</div>
+                    <div class="chart-wrapper">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">📍 Top 10 Talent Locations</div>
+                    <div class="chart-wrapper">
+                        <canvas id="locationChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">💰 Compensation Distribution</div>
+                    <div class="chart-wrapper">
+                        <canvas id="salaryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters-section">
+            <h2 class="section-title">Filter & Search Talent Pool</h2>
+            <p class="section-subtitle">Refine results to identify specific profiles of interest</p>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">🔍 Search</label>
+                    <input type="text" id="searchInput" class="filter-input" placeholder="Name, title, or company...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">📍 Location</label>
+                    <select id="locationFilter" class="filter-select">
+                        <option value="">All Locations</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">⚙️ Role Category</label>
+                    <select id="roleFilter" class="filter-select">
+                        <option value="">All Roles</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">⚠️ Flight Risk</label>
+                    <select id="riskFilter" class="filter-select">
+                        <option value="">All Risk Levels</option>
+                        <option value="Very High">Very High</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                        <option value="Very Low">Very Low</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">🌐 Remote Suitability</label>
+                    <select id="remoteFilter" class="filter-select">
+                        <option value="">All Levels</option>
+                        <option value="Very High">Very High</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                        <option value="Very Low">Very Low</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">💼 Experience</label>
+                    <select id="experienceFilter" class="filter-select">
+                        <option value="">All Experience Levels</option>
+                        <option value="0-5">0-5 years</option>
+                        <option value="5-10">5-10 years</option>
+                        <option value="10-20">10-20 years</option>
+                        <option value="20+">20+ years</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-primary" onclick="applyFilters()">
+                    <span>🔍</span> Apply Filters
+                </button>
+                <button class="btn btn-secondary" onclick="resetFilters()">
+                    <span>↻</span> Reset All
+                </button>
+            </div>
+        </div>
+
+        <div class="directory-section">
+            <div class="directory-header">
+                <div>
+                    <h2 class="section-title">Talent Directory</h2>
+                    <p class="section-subtitle">Available profiles ready for immediate outreach</p>
+                </div>
+                <div class="results-info">
+                    <span class="results-count">Showing <strong id="resultsCount">1,878</strong> profiles</span>
+                    <span class="results-badge" id="resultsBadge">All</span>
+                </div>
+            </div>
+            <div class="talent-grid" id="talentGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Loading workforce data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let workforceData = [];
+        let filteredData = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof WORKFORCE_DATA !== 'undefined') {
+                workforceData = WORKFORCE_DATA;
+                filteredData = workforceData;
+                initializeDashboard();
+            } else {
+                document.getElementById('talentGrid').innerHTML = `
+                    <div style="text-align: center; padding: 4rem; color: var(--warning);">
+                        <h3>Data Loading Error</h3>
+                        <p>Please ensure workforce_data_compact.js is in the same directory as this HTML file.</p>
+                    </div>
+                `;
+            }
+        });
+
+        function initializeDashboard() {
+            updateKPIs();
+            populateFilters();
+            createCharts();
+            renderTalentGrid();
+        }
+
+        function updateKPIs() {
+            const totalPayroll = workforceData.reduce((sum, p) => sum + p.salary, 0);
+            const avgComp = totalPayroll / workforceData.length;
+            const highRisk = workforceData.filter(p => ['High', 'Very High'].includes(p.risk)).length;
+            const avgExp = workforceData.reduce((sum, p) => sum + p.experience, 0) / workforceData.length;
+            const remoteReady = workforceData.filter(p => ['High', 'Very High'].includes(p.remote)).length;
+            const uniqueLocations = new Set(workforceData.map(p => p.location)).size;
+            const engineers = workforceData.filter(p => p.category === 'Engineering').length;
+
+            document.getElementById('kpiTotalWorkforce').textContent = workforceData.length.toLocaleString();
+            document.getElementById('kpiTotalPayroll').textContent = '$' + Math.round(totalPayroll / 1000000) + 'M';
+            document.getElementById('kpiAvgComp').textContent = '$' + Math.round(avgComp / 1000) + 'K';
+            document.getElementById('kpiHighRisk').textContent = highRisk.toLocaleString();
+            document.getElementById('kpiAvgExperience').textContent = avgExp.toFixed(1);
+            document.getElementById('kpiRemoteReady').textContent = remoteReady.toLocaleString();
+            document.getElementById('kpiLocations').textContent = uniqueLocations.toLocaleString();
+            document.getElementById('kpiEngineers').textContent = engineers.toLocaleString();
+        }
+
+        function populateFilters() {
+            const locations = [...new Set(workforceData.map(p => p.location))].sort();
+            const locationSelect = document.getElementById('locationFilter');
+            locations.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc;
+                option.textContent = loc;
+                locationSelect.appendChild(option);
+            });
+
+            const roles = [...new Set(workforceData.map(p => p.category))].sort();
+            const roleSelect = document.getElementById('roleFilter');
+            roles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role;
+                option.textContent = role;
+                roleSelect.appendChild(option);
+            });
+        }
+
+        function createCharts() {
+            const chartDefaults = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { 
+                            padding: 15,
+                            font: { size: 11, weight: 600 },
+                            color: '#475569'
+                        }
+                    }
+                }
+            };
+
+            const roleCounts = {};
+            workforceData.forEach(p => {
+                roleCounts[p.category] = (roleCounts[p.category] || 0) + 1;
+            });
+
+            new Chart(document.getElementById('roleChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(roleCounts),
+                    datasets: [{
+                        data: Object.values(roleCounts),
+                        backgroundColor: ['#1e40af', '#0891b2', '#059669', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#06b6d4']
+                    }]
+                },
+                options: chartDefaults
+            });
+
+            const riskCounts = { 'Very High': 0, 'High': 0, 'Medium': 0, 'Low': 0, 'Very Low': 0 };
+            workforceData.forEach(p => {
+                if (riskCounts.hasOwnProperty(p.risk)) riskCounts[p.risk]++;
+            });
+
+            new Chart(document.getElementById('riskChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(riskCounts),
+                    datasets: [{
+                        label: 'Employees',
+                        data: Object.values(riskCounts),
+                        backgroundColor: ['#dc2626', '#f97316', '#f59e0b', '#059669', '#06b6d4']
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: { ...chartDefaults.plugins, legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#e2e8f0' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    }
+                }
+            });
+
+            const locationCounts = {};
+            workforceData.forEach(p => {
+                locationCounts[p.location] = (locationCounts[p.location] || 0) + 1;
+            });
+            const topLocations = Object.entries(locationCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            new Chart(document.getElementById('locationChart'), {
+                type: 'bar',
+                data: {
+                    labels: topLocations.map(l => l[0]),
+                    datasets: [{
+                        label: 'Employees',
+                        data: topLocations.map(l => l[1]),
+                        backgroundColor: '#0891b2'
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    indexAxis: 'y',
+                    plugins: { ...chartDefaults.plugins, legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#e2e8f0' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    }
+                }
+            });
+
+            const salaryRanges = {
+                '<$75K': 0, '$75K-$100K': 0, '$100K-$150K': 0, '$150K-$200K': 0, '>$200K': 0
+            };
+            workforceData.forEach(p => {
+                if (p.salary < 75000) salaryRanges['<$75K']++;
+                else if (p.salary < 100000) salaryRanges['$75K-$100K']++;
+                else if (p.salary < 150000) salaryRanges['$100K-$150K']++;
+                else if (p.salary < 200000) salaryRanges['$150K-$200K']++;
+                else salaryRanges['>$200K']++;
+            });
+
+            new Chart(document.getElementById('salaryChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(salaryRanges),
+                    datasets: [{
+                        label: 'Employees',
+                        data: Object.values(salaryRanges),
+                        backgroundColor: '#1e40af'
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: { ...chartDefaults.plugins, legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#e2e8f0' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderTalentGrid(data = filteredData) {
+            const grid = document.getElementById('talentGrid');
+            document.getElementById('resultsCount').textContent = data.length.toLocaleString();
+            document.getElementById('resultsBadge').textContent = data.length === workforceData.length ? 'All' : 'Filtered';
+
+            if (data.length === 0) {
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 4rem; grid-column: 1/-1;">
+                        <p style="font-size: 1.2rem; color: var(--text-secondary);">No profiles match your current filters.</p>
+                        <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="resetFilters()">Reset Filters</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const displayData = data.slice(0, 100);
+            
+            grid.innerHTML = displayData.map(person => {
+                const riskClass = person.risk.toLowerCase().replace(' ', '-');
+                const salaryK = Math.round(person.salary / 1000);
+                
+                return `
+                    <div class="talent-card">
+                        <div class="talent-card-header">
+                            <div class="talent-info">
+                                <div class="talent-name">${person.name || 'Name Unavailable'}</div>
+                                <div class="talent-title">${person.title}</div>
+                                <div class="talent-company">${person.company}</div>
+                            </div>
+                            <div class="risk-badge risk-${riskClass}">${person.risk}</div>
+                        </div>
+                        <div class="talent-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Location</div>
+                                <div class="detail-value">${person.location}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Category</div>
+                                <div class="detail-value">${person.category}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Experience</div>
+                                <div class="detail-value">${person.experience} years</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Total Comp</div>
+                                <div class="detail-value">$${salaryK}K</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Remote Fit</div>
+                                <div class="detail-value">${person.remote}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Education</div>
+                                <div class="detail-value">${person.degree || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <div class="talent-actions">
+                            ${person.linkedin ? `<a href="${person.linkedin}" target="_blank" class="action-btn linkedin-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                LinkedIn
+                            </a>` : '<span class="action-btn" style="opacity:0.5; cursor: not-allowed;">No LinkedIn</span>'}
+                            ${person.email ? `<a href="mailto:${person.email}" class="action-btn email-btn">
+                                📧 Email
+                            </a>` : '<span class="action-btn" style="opacity:0.5; cursor: not-allowed;">No Email</span>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (data.length > 100) {
+                grid.innerHTML += `
+                    <div style="text-align: center; padding: 2rem; grid-column: 1/-1; color: var(--text-secondary);">
+                        <p>Showing first 100 of ${data.length.toLocaleString()} results. Refine filters to see more specific profiles.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const location = document.getElementById('locationFilter').value;
+            const role = document.getElementById('roleFilter').value;
+            const risk = document.getElementById('riskFilter').value;
+            const remote = document.getElementById('remoteFilter').value;
+            const experience = document.getElementById('experienceFilter').value;
+
+            filteredData = workforceData.filter(person => {
+                const matchSearch = !searchTerm || 
+                    person.name.toLowerCase().includes(searchTerm) ||
+                    person.title.toLowerCase().includes(searchTerm) ||
+                    person.company.toLowerCase().includes(searchTerm);
+                const matchLocation = !location || person.location === location;
+                const matchRole = !role || person.category === role;
+                const matchRisk = !risk || person.risk === risk;
+                const matchRemote = !remote || person.remote === remote;
+                
+                let matchExperience = true;
+                if (experience) {
+                    if (experience === '0-5') matchExperience = person.experience < 5;
+                    else if (experience === '5-10') matchExperience = person.experience >= 5 && person.experience < 10;
+                    else if (experience === '10-20') matchExperience = person.experience >= 10 && person.experience < 20;
+                    else if (experience === '20+') matchExperience = person.experience >= 20;
+                }
+
+                return matchSearch && matchLocation && matchRole && matchRisk && matchRemote && matchExperience;
+            });
+
+            renderTalentGrid(filteredData);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('locationFilter').value = '';
+            document.getElementById('roleFilter').value = '';
+            document.getElementById('riskFilter').value = '';
+            document.getElementById('remoteFilter').value = '';
+            document.getElementById('experienceFilter').value = '';
+            filteredData = workforceData;
+            renderTalentGrid();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+    </script>
+</body>
+</html>
